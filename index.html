@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Athletik">
+<title>Mein Athletikplan</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f5f7fb;background:#101827}
+*{box-sizing:border-box}
+body{margin:0;padding:18px 15px 90px;max-width:650px;margin:auto}
+h1{font-size:28px;margin:8px 0}
+h2{font-size:20px}
+small,.muted{color:#aeb9c9}
+.card{background:#1d293b;border:1px solid #354358;border-radius:17px;padding:17px;margin:14px 0}
+button,select,input{font:inherit}
+button{border:0;border-radius:11px;padding:12px 15px;background:#42d6b0;color:#10231f;font-weight:700;cursor:pointer}
+button.secondary{background:#354358;color:white}
+nav{display:flex;gap:7px;margin:20px 0;flex-wrap:wrap}
+nav button{flex:1;min-width:85px}
+nav button.active{background:#42d6b0;color:#10231f}
+.exercise{border-top:1px solid #354358;padding:15px 0}
+.exercise:first-child{border:0}
+.exercise strong{display:block;margin-bottom:5px}
+.exercise p{font-size:13px;color:#b7c4d5;margin:5px 0 10px}
+.sets{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.set{background:#354358;color:white;min-width:43px}
+.set.done{background:#42d6b0;color:#10231f}
+input[type=number]{width:82px;background:#101827;color:white;border:1px solid #56657a;border-radius:8px;padding:8px}
+.check{display:flex;align-items:center;gap:10px;margin:12px 0}
+.check input{width:20px;height:20px;accent-color:#42d6b0}
+a{color:#75e7cb}
+.timer{font-size:32px;font-weight:bold;margin:10px 0;font-variant-numeric:tabular-nums}
+.progress{height:12px;background:#354358;border-radius:20px;overflow:hidden}
+.progress div{height:100%;background:#42d6b0;width:0}
+</style>
+</head>
+<body>
+<header>
+<small>DEIN 12-WOCHEN-PROGRAMM</small>
+<h1>ATHLETIK 💪</h1>
+<div class="muted">Kraft · Rücken · Balance · Radfahr-Ausgleich</div>
+</header>
+
+<div class="card">
+<label for="week">Trainingswoche</label>
+<select id="week"></select>
+<p id="progressText"></p>
+<div class="progress"><div id="progressBar"></div></div>
+</div>
+
+<nav id="tabs"></nav>
+<main id="content"></main>
+
+<div class="card">
+<h2>⏱ Pausentimer</h2>
+<div class="timer" id="clock">01:00</div>
+<button onclick="startTimer(60)">60 Sek.</button>
+<button onclick="startTimer(90)">90 Sek.</button>
+<button class="secondary" onclick="stopTimer()">Stopp</button>
+</div>
+
+<div class="card">
+<h2>🎵 Trainingsmusik</h2>
+<p><a href="https://music.apple.com/de/search?term=workout" target="_blank">Apple Music – Workout</a></p>
+<p><a href="https://open.spotify.com/search/workout/playlists" target="_blank">Spotify – Workout-Playlists</a></p>
+</div>
+
+<div class="card">
+<h2>Deine Trainingsdaten</h2>
+<p class="muted">Die Einträge werden lokal in diesem Browser gespeichert. Bei einem Gerätewechsel oder beim Löschen der Browserdaten können sie verloren gehen.</p>
+<button class="secondary" onclick="exportData()">Trainingsdaten sichern</button>
+</div>
+
+<script>
+const days=[
+{
+name:"A · Oberkörper",
+subtitle:"Montag · Rücken, Schultern und Haltung",
+equipment:["Hantelbank","Kurzhanteln 3, 4 und 5 kg","Kettlebell zum Rudern","Sling-Trainer befestigen","Trainingsmatte","Wasser und Handtuch"],
+warmup:"5 Min. locker rudern, Schulterkreisen, 10 leichte Sling-Rows.",
+exercises:[
+["Kurzhantel-Bankdrücken",3,"8–12","90 s","Schulterblätter stabil, kontrolliert drücken."],
+["Einarmiges Kettlebell-Rudern",3,"10/Seite","90 s","Eine Hand auf der Bank abstützen."],
+["Sling-Trainer-Rudern",3,"8–12","60 s","Körper gerade, Schulterblätter zurückziehen."],
+["Schulterdrücken",2,"8–10","90 s","Ohne Hohlkreuz, bei Bedarf sitzend."],
+["Sling Face Pulls",2,"10–12","60 s","Leichter Winkel, Ellbogen nach außen."],
+["Dead Bug",2,"8/Seite","45 s","Rücken kontrolliert, langsam bewegen."]
+]
+},
+{
+name:"B · Beine",
+subtitle:"Mittwoch · Beine, Gesäß und Balance",
+equipment:["Kettlebell für Kniebeugen","Kurzhanteln oder Kettlebells fürs Kreuzheben","Hantelbank als Stütze","Trainingsmatte","Wasser und Handtuch"],
+warmup:"5 Min. Walkingpad oder Rudern, 10 Kniebeugen ohne Gewicht, Hüftkreisen.",
+exercises:[
+["Goblet Squat",3,"8–12","90 s","Kettlebell vor der Brust, stabiler Stand."],
+["Rumänisches Kreuzheben",3,"8–10","90 s","Hüfte nach hinten, Rücken neutral."],
+["Rückwärts-Ausfallschritt",2,"8/Bein","75 s","Bei Bedarf an der Bank festhalten."],
+["Glute Bridge",3,"12","60 s","Gesäß anspannen, nicht ins Hohlkreuz."],
+["Einbeinstand",2,"30 s/Bein","45 s","Nahe an einer stabilen Stütze."],
+["Bird Dog",2,"8/Seite","45 s","Becken ruhig halten, langsam arbeiten."]
+]
+},
+{
+name:"C · Ganzkörper",
+subtitle:"Freitag · Funktionelle Kraft und Rumpf",
+equipment:["Kettlebell","Kurzhanteln","Sling-Trainer befestigen","Hantelbank","Trainingsmatte","Wasser und Handtuch"],
+warmup:"5 Min. locker rudern, Armkreisen, 10 Hüftbeugen, 10 leichte Kniebeugen.",
+exercises:[
+["Kettlebell-Kreuzheben",3,"10","90 s","Aus den Beinen und der Hüfte aufrichten."],
+["Sling-Trainer-Rudern",3,"10","60 s","Winkel so wählen, dass die Technik sauber bleibt."],
+["Erhöhte Liegestütze",2,"8–12","75 s","Hände auf einer stabilen Bank."],
+["Step-ups",2,"8/Bein","75 s","Nur auf einer niedrigen, sicheren Stufe."],
+["Farmer Carry",3,"30–40 s","60 s","Gewichte seitlich tragen, aufrecht gehen."],
+["Seitstütz",2,"20–30 s/Seite","45 s","Bei Bedarf mit angewinkelten Knien."]
+]
+}
+];
+
+let day=0;
+let timer=null;
+let remaining=60;
+let store={};
+try{store=JSON.parse(localStorage.getItem("athletikData")||"{}")}catch(e){store={}}
+const week=document.getElementById("week");
+for(let i=1;i<=12;i++){
+const o=document.createElement("option");
+o.value=i;o.textContent="Woche "+i;week.appendChild(o)
+}
+week.value=store.selectedWeek||1;
+week.onchange=()=>{store.selectedWeek=week.value;save();render()};
+
+function key(i,j){return "w"+week.value+"d"+day+"e"+i+"s"+j}
+function save(){localStorage.setItem("athletikData",JSON.stringify(store))}
+function render(){
+const tabs=document.getElementById("tabs");
+tabs.innerHTML="";
+days.forEach((d,i)=>{
+const b=document.createElement("button");
+b.textContent=d.name;
+b.className=i===day?"active":"secondary";
+b.onclick=()=>{day=i;render()};
+tabs.appendChild(b)
+});
+const d=days[day];
+let html="<h2>"+d.subtitle+"</h2>";
+html+='<div class="card"><h2>✓ Vor dem Training vorbereiten</h2>';
+d.equipment.forEach((item,i)=>{
+const k="prep"+week.value+day+i;
+html+='<label class="check"><input type="checkbox" data-key="'+k+'" '+(store[k]?"checked":"")+'> '+item+'</label>'
+});
+html+="</div>";
+html+='<div class="card"><h2>Aufwärmen</h2><p>'+d.warmup+'</p></div>';
+html+='<div class="card"><h2>Training</h2>';
+d.exercises.forEach((ex,i)=>{
+let sets=ex[1];
+if(Number(week.value)<=2)sets=Math.min(sets,2);
+html+='<div class="exercise"><strong>'+(i+1)+'. '+ex[0]+'</strong>';
+html+='<p>'+sets+' Sätze × '+ex[2]+' · Pause '+ex[3]+'</p>';
+html+='<p>'+ex[4]+'</p><div class="sets">';
+for(let j=0;j<sets;j++){
+const k=key(i,j);
+html+='<button class="set '+(store[k]?"done":"")+'" data-key="'+k+'">'+(store[k]?"✓":"S"+(j+1))+'</button>'
+}
+html+='</div><label>Gewicht (kg): <input type="number" min="0" step="0.5" data-weight="'+week.value+day+i+'" value="'+(store["weight"+week.value+day+i]??"")+'"></label></div>'
+});
+html+="</div>";
+html+='<div class="card"><h2>Cool-down</h2><p>3–5 Minuten locker gehen, Brust und Hüftbeuger sanft dehnen. Ohne Schmerz.</p></div>';
+document.getElementById("content").innerHTML=html;
+document.querySelectorAll("[data-key]").forEach(el=>{
+el.onchange=el.onclick=function(){
+const k=this.dataset.key;
+store[k]=this.type==="checkbox"?this.checked:!store[k];
+save();render()
+}
+});
+document.querySelectorAll("[data-weight]").forEach(el=>{
+el.onchange=function(){store["weight"+this.dataset.weight]=this.value;save()}
+});
+let total=0,done=0;
+days.forEach((x,di)=>x.exercises.forEach((ex,ei)=>{
+let n=Number(week.value)<=2?Math.min(ex[1],2):ex[1];
+for(let j=0;j<n;j++){
+total++;
+if(store["w"+week.value+"d"+di+"e"+ei+"s"+j])done++
+}
+}));
+document.getElementById("progressText").textContent=done+" von "+total+" Sätzen in dieser Woche erledigt";
+document.getElementById("progressBar").style.width=(done/total*100)+"%"
+}
+function startTimer(s){
+stopTimer();remaining=s;updateClock();
+timer=setInterval(()=>{
+remaining--;updateClock();
+if(remaining<=0){stopTimer();if(navigator.vibrate)navigator.vibrate(200)}
+},1000)
+}
+function stopTimer(){if(timer)clearInterval(timer);timer=null}
+function updateClock(){
+document.getElementById("clock").textContent=
+String(Math.floor(remaining/60)).padStart(2,"0")+":"+
+String(remaining%60).padStart(2,"0")
+}
+function exportData(){
+const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download="athletik-training-backup.json";a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
+render();
+</script>
+</body>
+</html>
